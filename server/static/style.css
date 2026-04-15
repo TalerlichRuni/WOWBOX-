@@ -601,17 +601,24 @@ body {
     background: rgba(139, 92, 246, 0.2);
 }
 
-.upload-text-main {
+.upload-btn-simulator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 12px 28px;
+    border-radius: var(--radius-full);
     font-size: 1.05rem;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: var(--space-xs);
+    margin-bottom: var(--space-md);
+    box-shadow: 0 4px 15px var(--primary-glow);
+    transition: all 0.3s var(--ease);
 }
 
-.upload-text-sub {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-sm);
+.upload-zone:hover .upload-btn-simulator {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px var(--primary-glow);
 }
 
 .upload-text-formats {
