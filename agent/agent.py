@@ -98,29 +98,43 @@ def handle_print_job(job_id, filename):
 
         logger.info(f"Image saved ({len(img_response.content)} bytes), connecting to printer...")
 
-        # Establish bluetooth connection automatically
-        manage_bluetooth(connect=True)
-
-        # Create a fresh printer instance and print
-        printer = create_printer()
-        printer.connect(PRINTER_MAC)
-
-        logger.info("Connected! Sending to printer...")
-        printer.print(temp_path)
-
-        logger.success(f"Print complete for job {job_id[:8]}!")
-        printer.disconnect()
-
-        report_status(job_id, 'completed')
-
-    except Exception as e:
-        logger.error(f"Print error: {e}")
-        if printer:
+        # Loop to retry connection if the printer is offline
+        while True:
             try:
+                # Establish bluetooth connection automatically
+                manage_bluetooth(connect=True)
+
+                # Create a fresh printer instance and print
+                printer = create_printer()
+                printer.connect(PRINTER_MAC)
+
+                logger.info("Connected! Sending to printer...")
+                printer.print(temp_path)
+
+                logger.success(f"Print complete for job {job_id[:8]}!")
                 printer.disconnect()
-            except Exception:
-                pass
-        report_status(job_id, 'failed', str(e))
+
+                report_status(job_id, 'completed')
+                break  # Success, exit the retry loop
+
+            except Exception as e:
+                error_msg = str(e)
+                if printer:
+                    try:
+                        printer.disconnect()
+                    except Exception:
+                        pass
+                
+                # Check if it's a temporary error (e.g., printer is off)
+                if any(err in error_msg for err in ["Failed to open", "Connection", "Battery", "Host is down", "Errno 112"]):
+                    logger.warning(f"Printer offline or low battery ({error_msg}). Retrying in 20 seconds...")
+                    manage_bluetooth(connect=False)
+                    time.sleep(20)
+                else:
+                    # Fatal error (e.g. bad format)
+                    logger.error(f"Fatal Print error: {error_msg}")
+                    report_status(job_id, 'failed', error_msg)
+                    break
 
     finally:
         manage_bluetooth(connect=False)
