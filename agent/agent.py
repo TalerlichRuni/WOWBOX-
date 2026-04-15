@@ -126,7 +126,7 @@ def handle_print_job(job_id, filename):
                         pass
                 
                 # Check if it's a temporary error (e.g., printer is off)
-                if any(err in error_msg for err in ["Failed to open", "Connection", "Battery", "Host is down", "Errno 112"]):
+                if any(err in error_msg for err in ["Failed to open", "Connection", "Battery", "Host is down", "Errno 112", "Errno 2", "No such file"]):
                     logger.warning(f"Printer offline or low battery ({error_msg}). Retrying in 20 seconds...")
                     manage_bluetooth(connect=False)
                     time.sleep(20)
