@@ -296,7 +296,7 @@ function renderQueue(queue) {
 function createQueueItemHTML(item) {
     const statusBadge = getStatusBadge(item.status);
     const timeAgo = getTimeAgo(item.created_at);
-    const showCancel = item.status === 'pending';
+    const showCancel = item.status === 'pending' || item.status === 'printing';
     const thumbUrl = `/api/thumbnail/${item.id}`;
 
     return `
