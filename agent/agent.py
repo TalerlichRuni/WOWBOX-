@@ -51,8 +51,15 @@ def manage_bluetooth(connect=True):
             subprocess.run(["hciconfig", "hci0", "sspmode", "0"], check=False)
             subprocess.run(["rfcomm", "release", "all"], check=False)
             subprocess.Popen(["rfcomm", "connect", "hci0", PRINTER_MAC, "1"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            time.sleep(2)
-            subprocess.run(["chmod", "666", "/dev/rfcomm0"], check=False)
+            
+            # Wait for /dev/rfcomm0 to be created (up to 10 seconds)
+            for _ in range(20):
+                if os.path.exists("/dev/rfcomm0"):
+                    subprocess.run(["chmod", "666", "/dev/rfcomm0"], check=False)
+                    logger.info("Bluetooth device /dev/rfcomm0 ready.")
+                    return
+                time.sleep(0.5)
+            logger.warning("Timeout waiting for /dev/rfcomm0")
         else:
             logger.info("Releasing Bluetooth connection...")
             subprocess.run(["rfcomm", "release", "all"], check=False)

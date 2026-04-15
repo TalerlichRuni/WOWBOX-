@@ -174,8 +174,8 @@ def cancel_item(item_id):
     if not item:
         return jsonify({'error': 'פריט לא נמצא'}), 404
 
-    if item['status'] not in ('pending',):
-        return jsonify({'error': 'ניתן לבטל רק פריטים בהמתנה'}), 400
+    if item['status'] not in ('pending', 'printing'):
+        return jsonify({'error': 'ניתן לבטל רק פריטים בהמתנה או בתהליך'}), 400
 
     # Delete file
     filepath = os.path.join(UPLOAD_FOLDER, item['filename'])
