@@ -85,10 +85,10 @@ async function handleLogin(e) {
             showApp();
             passwordInput.value = '';
         } else {
-            showError(data.error || 'סיסמה שגויה');
+            showError(data.error || 'Incorrect password');
         }
     } catch (err) {
-        showError('שגיאת חיבור לשרת');
+        showError('Server connection error');
     } finally {
         setButtonLoading(loginBtn, false);
     }
@@ -163,13 +163,13 @@ function handleFileSelect(file) {
     // Validate file type
     const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
     if (!allowed.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) {
-        showToast('סוג קובץ לא נתמך', 'error');
+        showToast('Unsupported file type', 'error');
         return;
     }
 
     // Validate file size (20MB)
     if (file.size > 20 * 1024 * 1024) {
-        showToast('הקובץ גדול מדי (מקסימום 20MB)', 'error');
+        showToast('File too large (max 20MB)', 'error');
         return;
     }
 
@@ -214,17 +214,18 @@ async function handleUpload() {
         const data = await res.json();
 
         if (res.ok && data.success) {
-            showToast('התמונה נשלחה להדפסה! 🖨️', 'success');
+            showToast('Sent with Love! 💖', 'success');
+            createHeartBurst(); // Heart animation!
             clearPreview();
             refreshQueue(); // Immediate refresh
         } else if (res.status === 401) {
-            showToast('נדרשת התחברות מחדש', 'error');
+            showToast('Please login again', 'error');
             showLogin();
         } else {
-            showToast(data.error || 'שגיאה בהעלאת התמונה', 'error');
+            showToast(data.error || 'Error uploading photo', 'error');
         }
     } catch (err) {
-        showToast('שגיאת חיבור לשרת', 'error');
+        showToast('Server connection error', 'error');
     } finally {
         setButtonLoading(sendPrintBtn, false);
     }
@@ -310,7 +311,7 @@ function createQueueItemHTML(item) {
             <div class="queue-item-actions">
                 ${statusBadge}
                 ${showCancel ? `
-                    <button class="queue-cancel-btn" data-id="${item.id}" title="ביטול">
+                    <button class="queue-cancel-btn" data-id="${item.id}" title="Cancel">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -327,19 +328,19 @@ function getStatusBadge(status) {
         case 'pending':
             return `<span class="status-badge status-pending">
                 <span class="status-dots"><span></span><span></span><span></span></span>
-                ממתין
+                Waiting
             </span>`;
         case 'printing':
             return `<span class="status-badge status-printing">
                 <span class="status-spinner"></span>
-                מדפיס
+                Printing
             </span>`;
         case 'completed':
             return `<span class="status-badge status-completed">
                 <svg class="status-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                הודפס
+                Printed
             </span>`;
         case 'failed':
             return `<span class="status-badge status-failed">
@@ -347,7 +348,7 @@ function getStatusBadge(status) {
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
-                נכשל
+                Failed
             </span>`;
         default:
             return `<span class="status-badge">${status}</span>`;
@@ -360,13 +361,13 @@ async function handleCancelItem(itemId) {
         const data = await res.json();
 
         if (res.ok) {
-            showToast('ההדפסה בוטלה', 'info');
+            showToast('Printing cancelled', 'info');
             refreshQueue();
         } else {
-            showToast(data.error || 'שגיאה בביטול', 'error');
+            showToast(data.error || 'Cancellation error', 'error');
         }
     } catch (err) {
-        showToast('שגיאת חיבור', 'error');
+        showToast('Connection error', 'error');
     }
 }
 
@@ -374,11 +375,11 @@ async function handleClearQueue() {
     try {
         const res = await fetch('/api/queue/clear', { method: 'POST' });
         if (res.ok) {
-            showToast('ההיסטוריה נוקתה', 'info');
+            showToast('History cleared', 'info');
             refreshQueue();
         }
     } catch (err) {
-        showToast('שגיאת חיבור', 'error');
+        showToast('Connection error', 'error');
     }
 }
 
@@ -454,11 +455,40 @@ function getTimeAgo(isoString) {
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 30) return 'עכשיו';
-    if (diffSec < 60) return `לפני ${diffSec} שניות`;
-    if (diffMin < 60) return `לפני ${diffMin} דקות`;
-    if (diffHour < 24) return `לפני ${diffHour} שעות`;
-    return `לפני ${diffDay} ימים`;
+    if (diffSec < 30) return 'Just now';
+    if (diffSec < 60) return `${diffSec}s ago`;
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHour < 24) return `${diffHour}h ago`;
+    return `${diffDay}d ago`;
+}
+
+// ─── Heart Burst Effect ─────────────────────────────────────────────────────
+function createHeartBurst() {
+    const container = document.body;
+    const count = 12;
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+
+    for (let i = 0; i < count; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-particle';
+        heart.innerHTML = `<svg viewBox="0 0 24 24" fill="%23FF6B6B"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+        
+        // Random trajectory
+        const angle = (Math.PI * 2 / count) * i + (Math.random() * 0.5);
+        const velocity = 5 + Math.random() * 5;
+        const tx = Math.cos(angle) * 150;
+        const ty = Math.sin(angle) * 150 - 100; // Ascend a bit
+
+        heart.style.left = centerX + 'px';
+        heart.style.top = centerY + 'px';
+        heart.style.setProperty('--tx', `${tx}px`);
+        heart.style.setProperty('--ty', `${ty}px`);
+        heart.style.animation = `heartBurst 1s ease-out forwards`;
+
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 1000);
+    }
 }
 
 function escapeHTML(str) {
