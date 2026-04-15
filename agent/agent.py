@@ -24,10 +24,7 @@ from loguru import logger
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, PROJECT_ROOT)
 
-from config import SERVER_URL, AGENT_KEY, PRINTER_MAC, POLL_INTERVAL, KEEPALIVE_INTERVAL
-
-# Track last time we talked to the printer to prevent auto-shutdown
-last_printer_interaction = 0
+from config import SERVER_URL, AGENT_KEY, PRINTER_MAC, POLL_INTERVAL
 
 
 def create_printer():
@@ -61,26 +58,6 @@ def manage_bluetooth(connect=True):
     except Exception as e:
         logger.error(f"Bluetooth management error: {e}")
 
-
-def send_heartbeat():
-    """Send a dummy command to the printer to keep it awake."""
-    global last_printer_interaction
-    logger.info("Sending heartbeat to printer to keep it awake...")
-    try:
-        manage_bluetooth(connect=True)
-        printer = create_printer()
-        printer.connect(PRINTER_MAC)
-        
-        status = printer.get_status()
-        battery = status[1]
-        logger.info(f"Heartbeat successful. Printer Battery: {battery}%")
-        
-        printer.disconnect()
-        last_printer_interaction = time.time()
-    except Exception as e:
-        logger.warning(f"Heartbeat failed: {e}")
-    finally:
-        manage_bluetooth(connect=False)
 
 
 def report_status(job_id, status, error=None):
@@ -139,8 +116,6 @@ def handle_print_job(job_id, filename):
                 printer.disconnect()
 
                 report_status(job_id, 'completed')
-                global last_printer_interaction
-                last_printer_interaction = time.time() # Reset clock after a real print
                 break  # Success, exit the retry loop
 
             except Exception as e:
@@ -178,11 +153,7 @@ def main():
     logger.info(f"  Server:  {SERVER_URL}")
     logger.info(f"  Printer: {PRINTER_MAC}")
     logger.info(f"  Poll:    every {POLL_INTERVAL}s")
-    logger.info(f"  Heartbeat: every {KEEPALIVE_INTERVAL}s")
     logger.info("=" * 50)
-
-    global last_printer_interaction
-    last_printer_interaction = time.time() # Initialize timer
 
     while True:
         try:
@@ -201,11 +172,7 @@ def main():
             data = response.json()
 
             if not data.get('has_job'):
-                # No pending jobs, check if we need to send a heartbeat
-                if time.time() - last_printer_interaction > KEEPALIVE_INTERVAL:
-                    send_heartbeat()
-                
-                # wait and try again
+                # No pending jobs, wait and try again
                 time.sleep(POLL_INTERVAL)
                 continue
 

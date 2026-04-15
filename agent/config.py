@@ -11,4 +11,3 @@ PRINTER_MAC = os.environ.get('PRINTER_MAC', '10:23:81:A4:6A:D4')
 
 # How often (seconds) to check the server for new print jobs
 POLL_INTERVAL = int(os.environ.get('POLL_INTERVAL', '5'))
-KEEPALIVE_INTERVAL = 120  # Delay in seconds to send heartbeat to printer (default: 2 minutes)
