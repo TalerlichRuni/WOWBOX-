@@ -21,7 +21,8 @@ import subprocess
 from loguru import logger
 
 # Add the project root to the path so we can import ivy2
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# Previously this was .. / .. but now dependencies are in the same repo root (one level up)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, PROJECT_ROOT)
 
 from config import SERVER_URL, AGENT_KEY, PRINTER_MAC, POLL_INTERVAL
