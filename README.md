@@ -1,76 +1,72 @@
-# 🖨️ WOWBOX - Remote Printing Platform
+# 🖨️ WOWBOX - Connecting Families with Love
 
-WOWBOX is a modern, fully-automated cloud platform designed to send photos from a smartphone directly to a Canon Ivy 2 Bluetooth printer from anywhere in the world. 
+WOWBOX is a heartwarming, fully-automated remote printing platform developed as part of **MiLab**. It is designed to bridge the distance between family members and their elderly loved ones by turning digital photos into physical memories in real-time.
 
-The system bridges the gap between web applications and low-level hardware communication using a persistent Raspberry Pi agent and a cloud-hosted Flask API.
+Using a **Raspberry Pi** and a **Canon Ivy 2** printer, WOWBOX allows anyone in the family to send a "moment of happiness" directly into their loved one's home from anywhere in the world.
 
-![WOWBOX Architecture](https://img.shields.io/badge/Architecture-Cloud%20to%20Hardware-blue)
-![Python](https://img.shields.io/badge/Python-3.13-yellow)
-![Flask](https://img.shields.io/badge/Flask-Web%20Framework-green)
+![WOWBOX Theme](https://img.shields.io/badge/Theme-Warm%20%26%20Emotional-red)
+![Architecture](https://img.shields.io/badge/Architecture-Cloud%20to%20Hardware-orange)
+![English UI](https://img.shields.io/badge/Language-English-blue)
+
+---
+
+## 🎨 Design Philosophy: "The Warm Connection"
+
+Unlike traditional technical platforms, WOWBOX features a **Warm UI** inspired by the physical device:
+*   **Soft Aesthetic:** Cream, wood-brown, and heart-red color palette.
+*   **Emotional Feedback:** Floating background hearts and **"Heart Burst"** particle animations when a photo is successfully sent.
+*   **Elderly Friendly:** Simple, large, and high-contrast interface designed for ease of use across generations.
+
+---
+
+## 🧙‍♂️ How It Works (The Simple Flow)
+
+Think of WOWBOX as a **Smart Love Messenger**:
+
+1.  **The Brain (Cloud Server):** We have a server in the cloud (hosted on Render). When a family member uploads a photo via the website, it sits in a secure "waiting room" (the Queue) ready to be collected.
+2.  **The Messenger (Raspberry Pi Agent):** The Raspberry Pi inside the WOWBOX is the messenger. It constantly checks the cloud server, asking: *"Is there a new memory for me to deliver?"*
+3.  **The Delivery (Printing):** As soon as it finds a photo, the Pi downloads it and speaks to the Canon Ivy printer via **Bluetooth**. The printer starts buzzing, the Heart on the box glows, and a physical photo slides out for the loved one to see.
 
 ---
 
 ## 🌟 Key Features
 
-* **Global Access:** Upload photos from any device, anywhere in the world, over the internet.
-* **Responsive UI:** A premium, dark-mode web interface tailored perfectly for mobile devices (RTL support, drag-and-drop, and live previews).
-* **Live Status:** Real-time printing queue and status tracking (Pending -> Printing -> Completed).
-* **Automated Hardware Agent:** A custom-built agent running as a highly-privileged `systemd` service on a Raspberry Pi, meaning it is 100% self-healing, automatic, and handles hardware Bluetooth sockets (`/dev/rfcomm0`) gracefully.
-* **Security:** Password-protected web interface & authenticated server-agent API keys.
+*   **Global Access:** Send photos from any smartphone, anywhere in the world.
+*   **No Manual Interaction:** The system is "Plug & Play" for the receiver. No screens to touch, no menus to navigate.
+*   **Self-Healing Agent:** The Pi agent is designed to automatically reconnect to the printer, wait for it if it's offline, and recover from power outages without any human intervention.
+*   **Private & Secure:** Password-protected access ensures only family members can send photos.
 
 ---
 
 ## 🏗️ Architecture
 
-The platform acts as a non-destructive outer layer on top of the original `ivy2.py` API. It is divided into two parts:
+The platform is split into two specialized units:
 
 ### 1. Cloud Server (`/server`)
-A Python Flask application (designed to be deployed on platforms like Render or Railway).
-* Exposes a Web UI for users to upload and queue prints.
-* Exposes an API for the Agent to fetch pending jobs.
-* Uses SQLite to manage print queuing and persistence.
+A Python Flask application managing the web interface and the central print queue.
+*   **Frontend:** Vanilla HTML/CSS/JS with a focus on CSS animations and mobile-first UX.
+*   **Backend:** SQLite database for persistent queue management and API for agent communication.
 
 ### 2. Raspberry Pi Agent (`/agent`)
-A Python Daemon tracking the cloud server.
-* Connects via API to pull the next available print job.
-* Silently orchestrates the low-level `rfcomm` socket connection to the physical MAC address of the Canon Ivy 2 printer.
-* Sends the binary photo data over Bluetooth and reports the status back to the cloud.
+A robust Python daemon tracking the server.
+*   **Systemd Service:** Runs as a persistent background service.
+*   **Retry Logic:** If the printer is off, the agent waits and retries every 20 seconds, ensuring no photo is lost.
+*   **Auto-Bluetooth:** Manages the Bluetooth socket stack (`rfcomm`) dynamically for each print to preserve battery and stability.
 
 ---
 
-## 🛠️ Tech Stack & Requirements
+## 🚀 Quick Setup
 
-* **Cloud Server:** Flask, Gunicorn, Vanilla HTML/CSS/JS (Lightweight, No modern frameworks needed to keep it lightning-fast).
-* **Pi Agent:** Python `requests`, `subprocess`, `loguru`.
-* **Hardware:** Raspberry Pi (running Raspberry Pi OS/Linux) and Canon Ivy 2 Printer.
+### ☁️ Cloud (Server)
+1. Deploy the `server/` directory (e.g., to Render).
+2. Set `WOWBOX_PASSWORD` and `AGENT_KEY` environment variables.
 
----
-
-## 🚀 Setup & Deployment
-
-### ☁️ Cloud Server Setup
-1. Clone the project.
-2. Enter the `server/` directory and install dependencies: `pip install -r requirements.txt`.
-3. Set your environment variables:
-   * `WOWBOX_PASSWORD`: The password for the Web UI.
-   * `AGENT_KEY`: A shared secret between the Server and the Pi.
-   * `SECRET_KEY`: Flask Session key.
-4. Deploy using the provided `Procfile` (e.g., `gunicorn app:app --bind 0.0.0.0:$PORT`).
-
-### 🍓 Raspberry Pi Setup
-1. Transfer the `agent/` folder to your Raspberry Pi.
-2. Update `config.py` with your server's URL, the shared `AGENT_KEY`, and the printer's MAC address.
-3. Install the provided Systemd Service (`wowbox-agent.service`). The service manages running as `root` (to create sockets) and restarts on its own in case of failure.
+### 🍓 Home (Raspberry Pi)
+1. Flash the code to the SD card.
+2. Connect the Pi to the internet (Ethernet is recommended for a seamless experience).
+3. Update `config.py` with your Server URL and Printer MAC address.
+4. Enable the service: `sudo systemctl enable wowbox-agent.service`.
 
 ---
 
-## 🧙‍♂️ How It Works (The Workflow)
-
-1. Turn on the physical printer.
-2. Go to the web app (`https://wowbox.onrender.com` or local equivalent) and enter your password.
-3. Select an image and hit **"שלח להדפסה"** (Send to Print).
-4. The Raspberry Pi automatically detects the new file, hooks into the Bluetooth stack, connects to the Canon Ivy, and prints it immediately.
-
----
-
-*Built with ❤️ for remote, seamless memories.*
+*Built with ❤️ for MiLab: Connecting families, one photo at a time.*
