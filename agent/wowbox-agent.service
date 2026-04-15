@@ -6,7 +6,8 @@ After=network.target bluetooth.target
 Type=simple
 User=root
 WorkingDirectory=/home/wowbox_milab/ivy2/
-Environment="WOWBOX_SERVER=http://192.168.1.227:5000"
+Environment="WOWBOX_SERVER=https://wowbox.onrender.com"
+Environment="AGENT_KEY=wowbox_secret_key_123!"
 ExecStart=/usr/bin/python3 platform/agent/agent.py
 Restart=always
 RestartSec=5
