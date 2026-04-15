@@ -1,0 +1,15 @@
+[Unit]
+Description=WOWBOX Remote Printing Agent
+After=network.target bluetooth.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/wowbox_milab/ivy2/
+Environment="WOWBOX_SERVER=http://192.168.1.227:5000"
+ExecStart=/usr/bin/python3 platform/agent/agent.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
